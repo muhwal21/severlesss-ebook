@@ -1,6 +1,16 @@
 const axios = require('axios');
 
 export default async function handler(req, res) {
+    // Tambahkan header CORS
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Mengizinkan semua origin
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    // Tangani preflight request (OPTIONS method)
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method === 'POST') {
         const { amount, customerName, email, phoneNumber } = req.body;
 
