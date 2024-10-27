@@ -13,26 +13,34 @@ export default function handler(req, res) {
     if (req.method === 'POST') {
         const { customerName, whatsappNumber, email, items, totalAmount } = req.body;
 
-        // Simpan data invoice dan logika pembuatan invoice Xendit
-        const invoiceData = {
-            external_id: `invoice_${Date.now()}`,
-            amount: totalAmount,
-            payer_email: email,
-            payer_name: customerName,
-            description: `Pembelian Buku - Nama: ${customerName}, Email: ${email}, No. HP: ${whatsappNumber}`,
-            currency: 'IDR',
-            success_redirect_url: 'https://example.com/success',
-            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            metadata: {
-                category: 'Buku',
-                items: items.map(item => ({ id: item.id, quantity: item.quantity }))
-            },
-            customer: {
-                given_names: customerName,
-                email,
-                mobile_number: whatsappNumber
-            }
-        };
+    const invoiceData = {
+        external_id: `invoice_${Date.now()}`,
+        amount: totalAmount,
+        payer_email: email,
+        payer_name: customerName,
+        description: `Pembelian Buku oleh ${customerName}:\n\n` +
+                     items.map(item => `- ${item.judul} - ${item.quantity} pcs - Rp${(item.harga * item.quantity).toLocaleString()}`).join('\n') +
+                     `\n\nTotal: Rp${totalAmount.toLocaleString()}`,
+        currency: 'IDR',
+        success_redirect_url: 'https://example.com/success',
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        metadata: {
+            category: 'Buku',
+            totalBooks: items.reduce((sum, item) => sum + item.quantity, 0),
+            items: items.map(item => ({ 
+                id: item.id, 
+                quantity: item.quantity, 
+                title: item.judul,
+                price: item.harga 
+            }))
+        },
+        customer: {
+            given_names: customerName,
+            email,
+            mobile_number: whatsappNumber
+        }
+    };
+    
 
         const apiKey = process.env.XENDIT_API_KEY;
         const authorizationHeader = 'Basic ' + Buffer.from(apiKey + ':').toString('base64');
